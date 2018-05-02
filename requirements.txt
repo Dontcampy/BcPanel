@@ -1,0 +1,12 @@
+aniso8601==3.0.0
+click==6.7
+Flask==1.0
+Flask-RESTful==0.3.6
+Flask-TokenAuth==0.1.0
+itsdangerous==0.24
+Jinja2==2.10
+MarkupSafe==1.0
+pymongo==3.6.1
+pytz==2018.4
+six==1.11.0
+Werkzeug==0.14.1
