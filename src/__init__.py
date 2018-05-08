@@ -4,8 +4,6 @@ import socket
 
 import src.api.reg_login as reg_login
 import src.api.temp as temp
-import src.api.upload as upload
-import src.api.sync as sync
 import src.api.user as user
 
 from flask import Flask, make_response
@@ -36,9 +34,7 @@ def output_json(data, code, headers=None):
     resp.headers.extend(headers or {'Access-Control-Allow-Origin': '*'})
     return resp
 
-#
-api.add_resource(reg_login.Register, "/api/register")
-api.add_resource(reg_login.CheckUsername, "/api/checkusername")
+
 api.add_resource(reg_login.Login, "/api/login")
 api.add_resource(temp.GetCard, "/api/getcard")
 api.add_resource(temp.GetCompany, "/api/getcompany")
@@ -48,11 +44,4 @@ api.add_resource(temp.AddCard, "/api/addcard")
 api.add_resource(temp.AddCompany, "/api/addcompany")
 api.add_resource(temp.AddVisit, "/api/addvisit")
 
-api.add_resource(upload.UploadImg, "/api/other/uploadimg")
-
 api.add_resource(user.SetUserInfo, "/user/setuserinfo")
-
-api.add_resource(sync.FirstSync, "/sync/first")
-api.add_resource(sync.Compare, "/sync/compare")
-api.add_resource(sync.Download, "/sync/download")
-api.add_resource(sync.Upload, "/sync/upload")

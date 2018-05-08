@@ -3,12 +3,6 @@ from bson import ObjectId
 
 from src.utils.dbtools import Mongo
 
-# data = {
-#     "username":"",
-#     "pwd":"",
-#     "admin": False,
-#     "favor":[]
-# }
 
 def insert_account(username, pwd):
     """
@@ -21,7 +15,7 @@ def insert_account(username, pwd):
     mongo = Mongo()
     try:
         data = {"username": username, "pwd": pwd, "admin": False, "favor": [], "vip": True,
-                "avatar": "", "section": "", "position": ""}
+                "avatar": "", "section": "", "position": "", "delete": False}
         success = mongo.user.insert(data)
     finally:
         mongo.close()
@@ -141,9 +135,143 @@ def push_favor(username, uuid):
     finally:
         mongo.close()
         return success
-# print(insert_account("hahha", "sdaf2311"))
-# insert_account("test3", "haha")
-# # print(set_usergroup(4, 0))
-# print(set_pwd("5accba4c30c342030033f62c", "guagua"))
-# print(select_username("hahhadsfadsf"))
-# push_favor("test3", "wahaha")
+
+
+def select_last_page(count):
+    """
+    获取最后一页数据
+    :param count: int 每页条数
+    :return: list or None
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        for item in mongo.user.find({"delete": False}).limit(count).sort("_id", -1):
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success
+
+
+def select_first_page(count):
+    """
+    获取第一页数据
+    :param count: int 每页条数
+    :return: list or None
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        for item in mongo.user.find({"delete": False}).sort("_id", -1).limit(count):
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success
+
+
+def select_dir_page(count, page, _id):
+    """
+    根据page值获取前后页数据
+    :param count: 每页数量
+    :param page: 当前页与目标页之差，page > 0 为向后， page < 0 为向前
+    :param _id: 当前页第一条数据的_id
+    :return: list or None
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        if page > 0:
+            condition = "$lt"
+            skip_count = page * count - 1
+        elif page < 0:
+            condition = "$gt"
+            skip_count = (abs(page) - 1) * count
+        else:
+            return None
+        for item in mongo.user.find({"_id": {condition: ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success
+
+
+def select_pre_page(count, page, _id):
+    """
+    获取前页数据
+    :param count: 每页数量
+    :param page: 当前页与目标页之差
+    :param _id: 当前页第一条数据的_id
+    :return: list or None
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        skip_count = (abs(page) - 1) * count
+        for item in mongo.user.find({"_id": {"$gt": ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success
+
+
+def select_next_page(count, page, _id):
+    """
+    获取后页数据
+    :param count: 每页数量
+    :param page: 当前页与目标页之差
+    :param _id: 当前页第一条数据的_id
+    :return: list or None
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        skip_count = page * count - 1
+        for item in mongo.user.find({"_id": {"$lt": ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success
+
+
+def select_page(count, page):
+    """
+    直接获取目标页数据，由于mongodb的skip特性，数据量过大的情况下性能十分堪忧，谨慎使用
+    :param count: 每页数量
+    :param page: 目标页数（非差值）
+    :return: list or None
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        skip_count = (page - 1) * count
+        for item in mongo.user.find({"delete": False}).sort("_id", -1).skip(skip_count).limit(count):
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success
+
+
+def count():
+    """
+    返回用户数量
+    :return: int
+    """
+    result = 0
+    mongo = Mongo()
+    try:
+        result = mongo.user.find({"delete": False}).count()
+    finally:
+        mongo.close()
+        return result

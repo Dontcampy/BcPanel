@@ -1,15 +1,5 @@
 from src.utils.dbtools import Mongo
-
-# data = {"_id": ObjectId(),
-#         "delete": False,
-#         "uuid": "", //客户端分配的uuid
-#         "name": "", //姓名
-#         "company_uuid": "uuid", //公司uuid
-#         "company_name": "", //公司名
-#         "creator": "", //创建者
-#         "create_time": time.time(), //创建时间戳
-#         "modifier": "", //修改者
-#         "mod_time": time.time()} //修改时间戳
+from bson import ObjectId
 
 
 def insert(data):
@@ -114,6 +104,7 @@ def select_company(company):
         mongo.close()
         return success
 
+
 def select_all():
     """
     查询
@@ -131,6 +122,7 @@ def select_all():
         mongo.close()
         return success
 
+
 def select_newest(timestamp):
     """
     将上次用户同步后的新数据uuid返回
@@ -147,3 +139,143 @@ def select_newest(timestamp):
     finally:
         mongo.close()
         return success
+
+
+def select_last_page(count):
+    """
+    获取最后一页数据
+    :param count: int 每页条数
+    :return: list or None
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        for item in mongo.card.find({"delete": False}).limit(count).sort("_id", -1):
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success
+
+
+def select_first_page(count):
+    """
+    获取第一页数据
+    :param count: int 每页条数
+    :return: list or None
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        for item in mongo.card.find({"delete": False}).sort("_id", -1).limit(count):
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success
+
+
+def select_dir_page(count, page, _id):
+    """
+    根据page值获取前后页数据
+    :param count: 每页数量
+    :param page: 当前页与目标页之差，page > 0 为向后， page < 0 为向前
+    :param _id: 当前页第一条数据的_id
+    :return: list or None
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        if page > 0:
+            condition = "$lt"
+            skip_count = page * count - 1
+        elif page < 0:
+            condition = "$gt"
+            skip_count = (abs(page) - 1) * count
+        else:
+            return None
+        for item in mongo.card.find({"_id": {condition: ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success
+
+
+def select_pre_page(count, page, _id):
+    """
+    获取前页数据
+    :param count: 每页数量
+    :param page: 当前页与目标页之差
+    :param _id: 当前页第一条数据的_id
+    :return: list or None
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        skip_count = (abs(page) - 1) * count
+        for item in mongo.card.find({"_id": {"$gt": ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success
+
+
+def select_next_page(count, page, _id):
+    """
+    获取后页数据
+    :param count: 每页数量
+    :param page: 当前页与目标页之差
+    :param _id: 当前页第一条数据的_id
+    :return: list or None
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        skip_count = page * count - 1
+        for item in mongo.card.find({"_id": {"$lt": ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success
+
+
+def select_page(count, page):
+    """
+    直接获取目标页数据，由于mongodb的skip特性，数据量过大的情况下性能十分堪忧，谨慎使用
+    :param count: 每页数量
+    :param page: 目标页数（非差值）
+    :return: list or None
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        skip_count = (page - 1) * count
+        for item in mongo.card.find({"delete": False}).sort("_id", -1).skip(skip_count).limit(count):
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success
+
+
+def count():
+    """
+    返回名片数量
+    :return: int
+    """
+    result = 0
+    mongo = Mongo()
+    try:
+        result = mongo.card.find({"delete": False}).count()
+    finally:
+        mongo.close()
+        return result
