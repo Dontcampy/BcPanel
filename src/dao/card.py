@@ -151,8 +151,8 @@ def select_last_page(count):
     result = []
     mongo = Mongo()
     try:
-        for item in mongo.card.find({"delete": False}).limit(count).sort("_id", -1):
-            result.append(item)
+        for item in mongo.card.find({"delete": False}).limit(count):
+            result.insert(0, item)
         success = result
     finally:
         mongo.close()
@@ -190,16 +190,15 @@ def select_dir_page(count, page, _id):
     mongo = Mongo()
     try:
         if page > 0:
-            condition = "$lt"
-            skip_count = page * count - 1
+            skip_count = (page - 1) * count
+            for item in mongo.card.find({"_id": {"$gt": ObjectId(_id)}, "delete": False}).skip(skip_count).limit(count):
+                result.insert(0, item)
+            success = result
         elif page < 0:
-            condition = "$gt"
-            skip_count = (abs(page) - 1) * count
-        else:
-            return None
-        for item in mongo.card.find({"_id": {condition: ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
-            result.append(item)
-        success = result
+            skip_count = abs(page) * count - 1
+            for item in mongo.card.find({"_id": {"$lt": ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
+                result.append(item)
+            success = result
     finally:
         mongo.close()
         return success
@@ -209,7 +208,7 @@ def select_pre_page(count, page, _id):
     """
     获取前页数据
     :param count: 每页数量
-    :param page: 当前页与目标页之差
+    :param page: 当前页与目标页之差，应该大于0
     :param _id: 当前页第一条数据的_id
     :return: list or None
     """
@@ -217,9 +216,9 @@ def select_pre_page(count, page, _id):
     result = []
     mongo = Mongo()
     try:
-        skip_count = (abs(page) - 1) * count
-        for item in mongo.card.find({"_id": {"$gt": ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
-            result.append(item)
+        skip_count = (page - 1) * count
+        for item in mongo.card.find({"_id": {"$gt": ObjectId(_id)}, "delete": False}).skip(skip_count).limit(count):
+            result.insert(0, item)
         success = result
     finally:
         mongo.close()
@@ -230,7 +229,7 @@ def select_next_page(count, page, _id):
     """
     获取后页数据
     :param count: 每页数量
-    :param page: 当前页与目标页之差
+    :param page: 当前页与目标页之差，应该小于0
     :param _id: 当前页第一条数据的_id
     :return: list or None
     """
@@ -238,7 +237,7 @@ def select_next_page(count, page, _id):
     result = []
     mongo = Mongo()
     try:
-        skip_count = page * count - 1
+        skip_count = abs(page) * count - 1
         for item in mongo.card.find({"_id": {"$lt": ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
             result.append(item)
         success = result
@@ -279,3 +278,7 @@ def count():
     finally:
         mongo.close()
         return result
+
+for item in select_page(3, 3):
+    print(item)
+print(count())
