@@ -3,8 +3,10 @@ import datetime
 import socket
 
 import src.api.reg_login as reg_login
-import src.api.temp as temp
 import src.api.user as user
+import src.api.card as card
+import src.api.company as company
+import src.api.visit as visit
 
 from flask import Flask, make_response
 from flask_restful import Api
@@ -13,7 +15,7 @@ from bson import ObjectId
 from src.utils.load_config import config
 
 
-# 设置socket超时防止假死
+# 设置socket超时防止假死, 仅调试阶段使用
 socket.setdefaulttimeout(10)
 
 app = Flask(__name__)
@@ -35,13 +37,37 @@ def output_json(data, code, headers=None):
     return resp
 
 
-api.add_resource(reg_login.Login, "/api/login")
-api.add_resource(temp.GetCard, "/api/getcard")
-api.add_resource(temp.GetCompany, "/api/getcompany")
-api.add_resource(temp.GetOneCompany, "/api/getonecompany")
-api.add_resource(temp.GetVisit, "/api/getvisit")
-api.add_resource(temp.AddCard, "/api/addcard")
-api.add_resource(temp.AddCompany, "/api/addcompany")
-api.add_resource(temp.AddVisit, "/api/addvisit")
+api.add_resource(reg_login.Login, "/login")
 
-api.add_resource(user.SetUserInfo, "/user/setuserinfo")
+api.add_resource(card.Add, "/card/add")
+api.add_resource(card.Delete, "/card/delete")
+api.add_resource(card.Modify, "/card/modify")
+api.add_resource(card.GetFirstPage, "/card/getfirstpage")
+api.add_resource(card.GetLastPage, "/card/getlastpage")
+api.add_resource(card.GetPage, "/card/getpage")
+api.add_resource(card.Search, "/card/search")
+
+api.add_resource(company.Add, "/company/add")
+api.add_resource(company.Delete, "/company/delete")
+api.add_resource(company.Modify, "/company/modify")
+api.add_resource(company.GetFirstPage, "/company/getfirstpage")
+api.add_resource(company.GetLastPage, "/company/getlastpage")
+api.add_resource(company.GetPage, "/company/getpage")
+api.add_resource(company.Search, "/company/search")
+
+api.add_resource(visit.Add, "/card/add")
+api.add_resource(visit.Delete, "/card/delete")
+api.add_resource(visit.Modify, "/card/modify")
+api.add_resource(visit.GetFirstPage, "/card/getfirstpage")
+api.add_resource(visit.GetLastPage, "/card/getlastpage")
+api.add_resource(visit.GetPage, "/card/getpage")
+api.add_resource(visit.Search, "/card/search")
+
+api.add_resource(user.Add, "/user/add")
+api.add_resource(user.Delete, "/user/delete")
+api.add_resource(user.SetPWD, "/user/setpwd")
+api.add_resource(user.SetAdmin, "/user/setadmin")
+api.add_resource(user.GetFirstPage, "/user/getfirstpage")
+api.add_resource(user.GetLastPage, "/user/getlastpage")
+api.add_resource(user.GetPage, "/user/getpage")
+api.add_resource(user.Search, "/user/search")

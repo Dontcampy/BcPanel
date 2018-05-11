@@ -1,4 +1,6 @@
 # Database access operations for user
+import re
+
 from bson import ObjectId
 
 from src.utils.dbtools import Mongo
@@ -14,8 +16,8 @@ def insert_account(username, pwd):
     success = None
     mongo = Mongo()
     try:
-        data = {"username": username, "pwd": pwd, "admin": False, "favor": [], "vip": True,
-                "avatar": "", "section": "", "position": "", "delete": False}
+        data = {"username": username, "pwd": pwd, "admin": False, "vip": True,
+                "delete": False, "system": False}
         success = mongo.user.insert(data)
     finally:
         mongo.close()
@@ -70,25 +72,6 @@ def set_admin(username):
         return success
 
 
-def set_info(username, avatar, section, position):
-    """
-    修改信息
-    :param avatar: 头像文件名 str
-    :param section: 部门 str
-    :param position: 职位 str
-    :return:
-    """
-    success = False
-    mongo = Mongo()
-    try:
-        result = mongo.user.update({"username": username},
-                                   {"$set": {"avatar": avatar, "section": section, "position": position}})
-        success = bool(result["n"])
-    finally:
-        mongo.close()
-        return success
-
-
 def select_id(_id):
     """
     通过uid查找用户信息
@@ -116,22 +99,6 @@ def select_username(username):
     try:
         result = mongo.user.find_one({"username": username})
         success = result
-    finally:
-        mongo.close()
-        return success
-
-
-def push_favor(username, uuid):
-    """
-    给favor添加数据
-    :param uuid: 名片uuid
-    :return: boolean
-    """
-    success = False
-    mongo = Mongo()
-    try:
-        result = mongo.user.update_one({"username": username}, {"$push": {"favor": {"$each": [uuid], "$position": 0}}})
-        success = bool(result["n"])
     finally:
         mongo.close()
         return success

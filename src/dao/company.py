@@ -1,3 +1,5 @@
+import re
+
 from src.utils.dbtools import Mongo
 from bson import ObjectId
 
@@ -259,3 +261,22 @@ def count():
     finally:
         mongo.close()
         return result
+
+
+def select_fuzzy(key):
+    """
+    根据关键字进行模糊查询
+    :param key: str 关键字
+    :return:
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        for item in mongo.company.find({"$or":[{"name": re.compile(key)},
+                                            {"creator": re.compile(key)}]}).sort("_id", -1):
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success

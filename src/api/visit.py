@@ -1,4 +1,6 @@
-import src.dao.user as user
+import ast
+
+import src.dao.visit as visit
 import src.utils.verify as verify
 
 from flask_restful import Resource, reqparse
@@ -10,13 +12,17 @@ class Add(Resource):
         result = {"success": False}
         parser = reqparse.RequestParser()
         parser.add_argument("token")
-        parser.add_argument("username")
-        parser.add_argument("pwd")
+        parser.add_argument("uuid")
+        parser.add_argument("owner_uuid")
+        parser.add_argument("creator")
+        parser.add_argument("create_time", type=int)
+        parser.add_argument("modifier")
+        parser.add_argument("mod_time", type=int)
+        parser.add_argument("local_data")
         args = parser.parse_args()
 
-        if verify.verify_t(args["token"]) and user.insert_account(args["username"], args["pwd"]):
+        if verify.verify_t(args["token"]) and visit.insert(args):
             result["success"] = True
-
         return result
 
 
@@ -25,42 +31,27 @@ class Delete(Resource):
         result = {"success": False}
         parser = reqparse.RequestParser()
         parser.add_argument("token")
-        parser.add_argument("username", action="append")
+        parser.add_argument("uuid", action="append")
         args = parser.parse_args()
 
         if verify.verify_t(args["token"]):
-            for item in args["username"]:
-                user.del_account(item)
+            for item in args["uuid"]:
+                visit.delete(item)
             result["success"] = True
         return result
-    
 
-class SetPWD(Resource):
+
+class Modify(Resource):
     def post(self):
         result = {"success": False}
         parser = reqparse.RequestParser()
         parser.add_argument("token")
-        parser.add_argument("username")
-        parser.add_argument("pwd")
+        parser.add_argument("data")
         args = parser.parse_args()
 
-        if verify.verify_t(args["token"]) and user.set_pwd(args["username"], args["pwd"]):
+        data = ast.literal_eval(args["data"])
+        if verify.verify_t(args["token"]) and visit.update(data["uuid"], data):
             result["success"] = True
-
-        return result
-
-
-class SetAdmin(Resource):
-    def post(self):
-        result = {"success": False}
-        parser = reqparse.RequestParser()
-        parser.add_argument("token")
-        parser.add_argument("username")
-        args = parser.parse_args()
-
-        if verify.verify_t(args["token"]) and user.set_admin(args["username"]):
-            result["success"] = True
-
         return result
 
 
@@ -71,8 +62,8 @@ class GetFirstPage(Resource):
         count = request.args.get("count", type=int)
 
         if verify.verify_t(token):
-            result["data"] = user.select_first_page(count)
-            result["count"] = user.count()
+            result["data"] = visit.select_first_page(count)
+            result["count"] = visit.count()
             result["success"] = True
         return result
 
@@ -84,8 +75,8 @@ class GetLastPage(Resource):
         count = request.args.get("count", type=int)
 
         if verify.verify_t(token):
-            result["data"] = user.select_last_page(count)
-            result["count"] = user.count()
+            result["data"] = visit.select_last_page(count)
+            result["count"] = visit.count()
             result["success"] = True
         return result
 
@@ -99,8 +90,8 @@ class GetPage(Resource):
         count = request.args.get("count", type=int)
 
         if verify.verify_t(token):
-            result["data"] = user.select_dir_page(count, page, _id)
-            result["count"] = user.count()
+            result["data"] = visit.select_dir_page(count, page, _id)
+            result["count"] = visit.count()
             result["success"] = True
         return result
 
@@ -112,6 +103,6 @@ class Search(Resource):
         key = request.args.get("key")
 
         if verify.verify_t(token):
-            result["data"] = user.select_username(key)
+            result["data"] = visit.select_fuzzy(key)
             result["success"] = True
         return result

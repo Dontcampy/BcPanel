@@ -1,3 +1,5 @@
+import re
+
 from src.utils.dbtools import Mongo
 from bson import ObjectId
 
@@ -279,6 +281,22 @@ def count():
         mongo.close()
         return result
 
-for item in select_page(3, 3):
-    print(item)
-print(count())
+
+def select_fuzzy(key):
+    """
+    根据关键字进行模糊查询
+    :param key: str 关键字
+    :return:
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        for item in mongo.card.find({"$or":[{"name": re.compile(key)},
+                                            {"company_name": re.compile(key)},
+                                            {"creator": re.compile(key)}]}).sort("_id", -1):
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success
