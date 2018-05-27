@@ -14,6 +14,8 @@ def insert(data):
     success = None
     mongo = Mongo()
     try:
+        if "token" in data:
+            del data["token"]
         success = mongo.visit.insert(data)
     finally:
         mongo.close()
@@ -29,7 +31,7 @@ def delete(uuid):
     success = False
     mongo = Mongo()
     try:
-        result = mongo.visit.remove({"uuid": uuid})
+        result = mongo.visit.update_one({"uuid": uuid}, {"$set": {"delete": True}})
         success = bool(result["n"])
     finally:
         mongo.close()
@@ -46,7 +48,9 @@ def update(uuid, new_data):
     success = False
     mongo = Mongo()
     try:
-        result = mongo.visit.update_one({"uuid": uuid}, {"$set": new_data}, upsert=True)
+        if "_id" in new_data:
+            del new_data["id"]
+        result = mongo.visit.update_one({"uuid": uuid}, {"$set": new_data})
         success = bool(result["n"])
     finally:
         mongo.close()
@@ -63,7 +67,6 @@ def select_uuid(uuid):
     mongo = Mongo()
     try:
         result = mongo.visit.find_one({"uuid": uuid})
-        del result["_id"]
         success = result
     finally:
         mongo.close()
@@ -81,7 +84,6 @@ def select_owner(owner_uuid):
     mongo = Mongo()
     try:
         for item in mongo.visit.find({"owner_uuid": owner_uuid}).sort('_id', -1):
-            del item["_id"]
             result.append(item)
         success = result
     finally:
@@ -98,25 +100,7 @@ def select_all():
     mongo = Mongo()
     try:
         for item in mongo.visit.find():
-            del item["_id"]
             result.append(item)
-        success = result
-    finally:
-        mongo.close()
-        return success
-
-def select_newest(timestamp):
-    """
-    将上次用户同步后的新数据uuid返回
-    :param timestamp: 时间戳timestamp
-    :return: list or None
-    """
-    success = None
-    result = []
-    mongo = Mongo()
-    try:
-        for item in mongo.visit.find({"create_time": {"$gt": timestamp}}, {"_id":0, "uuid": 1}):
-            result.append(item["uuid"])
         success = result
     finally:
         mongo.close()
@@ -272,7 +256,7 @@ def select_fuzzy(key):
     result = []
     mongo = Mongo()
     try:
-        for item in mongo.company.find({"$or":[{"creator": re.compile(key)}]}).sort("_id", -1):
+        for item in mongo.company.find({"$or": [{"creator": re.compile(key)}]}).sort("_id", -1):
             result.append(item)
         success = result
     finally:

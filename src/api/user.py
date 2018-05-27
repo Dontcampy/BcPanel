@@ -5,7 +5,7 @@ from flask_restful import Resource, reqparse
 from flask import request
 
 
-class Add(Resource):
+class UserAdd(Resource):
     def post(self):
         result = {"success": False}
         parser = reqparse.RequestParser()
@@ -20,7 +20,7 @@ class Add(Resource):
         return result
 
 
-class Delete(Resource):
+class UserDelete(Resource):
     def post(self):
         result = {"success": False}
         parser = reqparse.RequestParser()
@@ -35,7 +35,7 @@ class Delete(Resource):
         return result
     
 
-class SetPWD(Resource):
+class UserSetPWD(Resource):
     def post(self):
         result = {"success": False}
         parser = reqparse.RequestParser()
@@ -50,7 +50,7 @@ class SetPWD(Resource):
         return result
 
 
-class SetAdmin(Resource):
+class UserSetAdmin(Resource):
     def post(self):
         result = {"success": False}
         parser = reqparse.RequestParser()
@@ -60,11 +60,23 @@ class SetAdmin(Resource):
 
         if verify.verify_t(args["token"]) and user.set_admin(args["username"]):
             result["success"] = True
-
         return result
 
 
-class GetFirstPage(Resource):
+class UserGetByName(Resource):
+    def get(self):
+        result = {"success": False}
+        token = request.args.get("token")
+        username = request.args.get("username")
+
+        if verify.verify_t(token):
+            result["data"] = user.select_username(username)
+            del result["data"]["pwd"]
+            result["success"] = True
+        return result
+
+
+class UserGetFirstPage(Resource):
     def get(self):
         result = {"success": False}
         token = request.args.get("token")
@@ -77,7 +89,7 @@ class GetFirstPage(Resource):
         return result
 
 
-class GetLastPage(Resource):
+class UserGetLastPage(Resource):
     def get(self):
         result = {"success": False}
         token = request.args.get("token")
@@ -90,7 +102,7 @@ class GetLastPage(Resource):
         return result
 
 
-class GetPage(Resource):
+class UserGetPage(Resource):
     def get(self):
         result = {"success": False}
         token = request.args.get("token")
@@ -105,13 +117,13 @@ class GetPage(Resource):
         return result
 
 
-class Search(Resource):
+class UserSearch(Resource):
     def get(self):
         result = {"success": False}
         token = request.args.get("token")
         key = request.args.get("key")
 
         if verify.verify_t(token):
-            result["data"] = user.select_username(key)
+            result["data"] = user.select_fuzzy(key)
             result["success"] = True
         return result

@@ -13,6 +13,8 @@ def insert(data):
     success = None
     mongo = Mongo()
     try:
+        if "token" in data:
+            del data["token"]
         success = mongo.card.insert(data)
     finally:
         mongo.close()
@@ -28,7 +30,7 @@ def delete(uuid):
     success = False
     mongo = Mongo()
     try:
-        result = mongo.card.remove({"uuid": uuid})
+        result = mongo.card.update_one({"uuid": uuid}, {"$set": {"delete": True}})
         success = bool(result["n"])
     finally:
         mongo.close()
@@ -45,8 +47,26 @@ def update(uuid, new_data):
     success = False
     mongo = Mongo()
     try:
-        result = mongo.card.update_one({"uuid": uuid}, {"$set": new_data}, upsert=True)
+        if "_id" in new_data:
+            del new_data["id"]
+        result = mongo.card.update_one({"uuid": uuid}, {"$set": new_data})
         success = bool(result["n"])
+    finally:
+        mongo.close()
+        return success
+
+
+def select_id(_id):
+    """
+    通过id查询
+    :param _id: str
+    :return: None or dict
+    """
+    success = None
+    mongo = Mongo()
+    try:
+        result = mongo.card.find_one({"_id": ObjectId(_id)})
+        success = result
     finally:
         mongo.close()
         return success
@@ -62,7 +82,6 @@ def select_uuid(uuid):
     mongo = Mongo()
     try:
         result = mongo.card.find_one({"uuid": uuid})
-        del result["_id"]
         success = result
     finally:
         mongo.close()
@@ -80,7 +99,6 @@ def select_name(name):
     mongo = Mongo()
     try:
         for item in mongo.card.find({"name": name}):
-            del item["_id"]
             result.append(item)
         success = result
     finally:
@@ -99,7 +117,6 @@ def select_company(company):
     mongo = Mongo()
     try:
         for item in mongo.card.find({"company_name": company}):
-            del item["_id"]
             result.append(item)
         success = result
     finally:
@@ -117,26 +134,7 @@ def select_all():
     mongo = Mongo()
     try:
         for item in mongo.card.find():
-            del item["_id"]
             result.append(item)
-        success = result
-    finally:
-        mongo.close()
-        return success
-
-
-def select_newest(timestamp):
-    """
-    将上次用户同步后的新数据uuid返回
-    :param timestamp: 时间戳timestamp
-    :return: list or None
-    """
-    success = None
-    result = []
-    mongo = Mongo()
-    try:
-        for item in mongo.card.find({"create_time": {"$gt": timestamp}}, {"_id":0, "uuid": 1}):
-            result.append(item["uuid"])
         success = result
     finally:
         mongo.close()

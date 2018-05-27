@@ -22,6 +22,7 @@ class Login(Resource):
             if data["admin"] or data["system"]:
                 result["success"] = True
                 result["token"] = get_token(data["username"])
+                del data["pwd"]
                 result["user"] = data
                 return result
 

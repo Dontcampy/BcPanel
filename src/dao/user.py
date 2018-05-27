@@ -16,9 +16,10 @@ def insert_account(username, pwd):
     success = None
     mongo = Mongo()
     try:
-        data = {"username": username, "pwd": pwd, "admin": False, "vip": True,
-                "delete": False, "system": False}
-        success = mongo.user.insert(data)
+        if mongo.user.find_one({"username": username}) is None:
+            data = {"username": username, "pwd": pwd, "admin": False, "vip": True,
+                    "delete": False, "system": False}
+            success = mongo.user.insert(data)
     finally:
         mongo.close()
         return success
@@ -115,6 +116,7 @@ def select_last_page(count):
     mongo = Mongo()
     try:
         for item in mongo.user.find({"delete": False}).limit(count):
+            del item["pwd"]
             result.insert(0, item)
         success = result
     finally:
@@ -133,6 +135,7 @@ def select_first_page(count):
     mongo = Mongo()
     try:
         for item in mongo.user.find({"delete": False}).sort("_id", -1).limit(count):
+            del item["pwd"]
             result.append(item)
         success = result
     finally:
@@ -155,11 +158,13 @@ def select_dir_page(count, page, _id):
         if page > 0:
             skip_count = (page - 1) * count
             for item in mongo.user.find({"_id": {"$gt": ObjectId(_id)}, "delete": False}).skip(skip_count).limit(count):
+                del item["pwd"]
                 result.insert(0, item)
             success = result
         elif page < 0:
             skip_count = abs(page) * count - 1
             for item in mongo.user.find({"_id": {"$lt": ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
+                del item["pwd"]
                 result.append(item)
             success = result
     finally:
@@ -181,6 +186,7 @@ def select_pre_page(count, page, _id):
     try:
         skip_count = (page - 1) * count
         for item in mongo.user.find({"_id": {"$gt": ObjectId(_id)}, "delete": False}).skip(skip_count).limit(count):
+            del item["pwd"]
             result.insert(0, item)
         success = result
     finally:
@@ -202,6 +208,7 @@ def select_next_page(count, page, _id):
     try:
         skip_count = abs(page) * count - 1
         for item in mongo.user.find({"_id": {"$lt": ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
+            del item["pwd"]
             result.append(item)
         success = result
     finally:
@@ -222,6 +229,7 @@ def select_page(count, page):
     try:
         skip_count = (page - 1) * count
         for item in mongo.user.find({"delete": False}).sort("_id", -1).skip(skip_count).limit(count):
+            del item["pwd"]
             result.append(item)
         success = result
     finally:
@@ -241,3 +249,22 @@ def count():
     finally:
         mongo.close()
         return result
+
+
+def select_fuzzy(key):
+    """
+    根据关键字进行模糊查询
+    :param key: str 关键字
+    :return:
+    """
+    success = None
+    result = []
+    mongo = Mongo()
+    try:
+        for item in mongo.user.find({"$or": [{"username": re.compile(key)}]}).sort("_id", -1):
+            del item["pwd"]
+            result.append(item)
+        success = result
+    finally:
+        mongo.close()
+        return success

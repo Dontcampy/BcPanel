@@ -7,7 +7,7 @@ from flask_restful import Resource, reqparse
 from flask import request
 
 
-class Add(Resource):
+class VisitAdd(Resource):
     def post(self):
         result = {"success": False}
         parser = reqparse.RequestParser()
@@ -21,12 +21,13 @@ class Add(Resource):
         parser.add_argument("local_data")
         args = parser.parse_args()
 
+        args["delete"] = False
         if verify.verify_t(args["token"]) and visit.insert(args):
             result["success"] = True
         return result
 
 
-class Delete(Resource):
+class VisitDelete(Resource):
     def post(self):
         result = {"success": False}
         parser = reqparse.RequestParser()
@@ -41,7 +42,7 @@ class Delete(Resource):
         return result
 
 
-class Modify(Resource):
+class VisitModify(Resource):
     def post(self):
         result = {"success": False}
         parser = reqparse.RequestParser()
@@ -55,7 +56,19 @@ class Modify(Resource):
         return result
 
 
-class GetFirstPage(Resource):
+class VisitGetByUUID(Resource):
+    def get(self):
+        result = {"success": False}
+        token = request.args.get("token")
+        uuid = request.args.get("uuid")
+
+        if verify.verify_t(token):
+            result["data"] = visit.select_uuid(uuid)
+            result["success"] = True
+        return result
+
+
+class VisitGetFirstPage(Resource):
     def get(self):
         result = {"success": False}
         token = request.args.get("token")
@@ -68,7 +81,7 @@ class GetFirstPage(Resource):
         return result
 
 
-class GetLastPage(Resource):
+class VisitGetLastPage(Resource):
     def get(self):
         result = {"success": False}
         token = request.args.get("token")
@@ -81,7 +94,7 @@ class GetLastPage(Resource):
         return result
 
 
-class GetPage(Resource):
+class VisitGetPage(Resource):
     def get(self):
         result = {"success": False}
         token = request.args.get("token")
@@ -96,7 +109,7 @@ class GetPage(Resource):
         return result
 
 
-class Search(Resource):
+class VisitSearch(Resource):
     def get(self):
         result = {"success": False}
         token = request.args.get("token")
