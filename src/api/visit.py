@@ -22,6 +22,7 @@ class VisitAdd(Resource):
         args = parser.parse_args()
 
         args["delete"] = False
+        args["local_data"] = ast.literal_eval(args["local_data"])
         if verify.verify_t(args["token"]) and visit.insert(args):
             result["success"] = True
         return result
