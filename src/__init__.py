@@ -13,7 +13,7 @@ from src.api import *
 
 
 # 设置socket超时防止假死, 仅调试阶段使用
-socket.setdefaulttimeout(10)
+# socket.setdefaulttimeout(10)
 
 app = Flask(__name__)
 api = Api(app)
@@ -34,6 +34,7 @@ def output_json(data, code, headers=None):
     return resp
 
 
+# 路由列表
 api.add_resource(reg_login.Login, "/login")
 
 api.add_resource(CardAdd, "/card/add")
@@ -72,3 +73,8 @@ api.add_resource(UserGetFirstPage, "/user/getfirstpage")
 api.add_resource(UserGetLastPage, "/user/getlastpage")
 api.add_resource(UserGetPage, "/user/getpage")
 api.add_resource(UserSearch, "/user/search")
+
+api.add_resource(LogGetByName, "/log/getbyname")
+api.add_resource(LogGetByUUID, "/log/getbyuuid")
+
+api.add_resource(StatGetAll, "/stat/getall")

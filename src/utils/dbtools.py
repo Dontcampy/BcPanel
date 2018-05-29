@@ -10,6 +10,7 @@ class Mongo():
         self.card = self.db.card
         self.company = self.db.company
         self.visit = self.db.visit
+        self.log = self.db.log
 
     def close(self):
         self.client.close()

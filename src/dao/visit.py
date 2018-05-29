@@ -1,4 +1,5 @@
 import re
+import traceback
 
 from bson import ObjectId
 
@@ -17,6 +18,8 @@ def insert(data):
         if "token" in data:
             del data["token"]
         success = mongo.visit.insert(data)
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -32,7 +35,9 @@ def delete(uuid):
     mongo = Mongo()
     try:
         result = mongo.visit.update_one({"uuid": uuid}, {"$set": {"delete": True}})
-        success = bool(result["n"])
+        success = bool(True)
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -51,7 +56,9 @@ def update(uuid, new_data):
         if "_id" in new_data:
             del new_data["id"]
         result = mongo.visit.update_one({"uuid": uuid}, {"$set": new_data})
-        success = bool(result["n"])
+        success = bool(True)
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -68,6 +75,8 @@ def select_uuid(uuid):
     try:
         result = mongo.visit.find_one({"uuid": uuid})
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -86,6 +95,8 @@ def select_owner(owner_uuid):
         for item in mongo.visit.find({"owner_uuid": owner_uuid}).sort('_id', -1):
             result.append(item)
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -102,6 +113,8 @@ def select_all():
         for item in mongo.visit.find():
             result.append(item)
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -120,6 +133,8 @@ def select_last_page(count):
         for item in mongo.visit.find({"delete": False}).limit(count):
             result.insert(0, item)
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -138,6 +153,8 @@ def select_first_page(count):
         for item in mongo.visit.find({"delete": False}).sort("_id", -1).limit(count):
             result.append(item)
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -165,6 +182,8 @@ def select_dir_page(count, page, _id):
             for item in mongo.visit.find({"_id": {"$lt": ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
                 result.append(item)
             success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -186,6 +205,8 @@ def select_pre_page(count, page, _id):
         for item in mongo.visit.find({"_id": {"$gt": ObjectId(_id)}, "delete": False}).skip(skip_count).limit(count):
             result.insert(0, item)
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -207,6 +228,8 @@ def select_next_page(count, page, _id):
         for item in mongo.visit.find({"_id": {"$lt": ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
             result.append(item)
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -227,6 +250,8 @@ def select_page(count, page):
         for item in mongo.visit.find({"delete": False}).sort("_id", -1).skip(skip_count).limit(count):
             result.append(item)
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -241,6 +266,8 @@ def count():
     mongo = Mongo()
     try:
         result = mongo.visit.find({"delete": False}).count()
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return result
@@ -259,6 +286,8 @@ def select_fuzzy(key):
         for item in mongo.company.find({"$or": [{"creator": re.compile(key)}]}).sort("_id", -1):
             result.append(item)
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success

@@ -14,9 +14,9 @@ class UserAdd(Resource):
         parser.add_argument("pwd")
         args = parser.parse_args()
 
-        if verify.verify_t(args["token"]) and user.insert_account(args["username"], args["pwd"]):
+        username = verify.verify_t(args["token"])
+        if username and user.insert_account(args["username"], args["pwd"]):
             result["success"] = True
-
         return result
 
 

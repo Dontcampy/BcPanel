@@ -1,6 +1,7 @@
 import ast
 
 import src.dao.card as card
+import src.dao.log as log
 import src.utils.verify as verify
 
 from flask_restful import Resource, reqparse
@@ -25,7 +26,9 @@ class CardAdd(Resource):
 
         args["delete"] = False
         args["local_data"] = ast.literal_eval(args["local_data"])
-        if verify.verify_t(args["token"]) and card.insert(args):
+        username = verify.verify_t(args["token"])
+        if username and card.insert(args):
+            log.insert_insert(args["uuid"], username)
             result["success"] = True
         return result
 
@@ -38,9 +41,11 @@ class CardDelete(Resource):
         parser.add_argument("uuid", action="append")
         args = parser.parse_args()
 
-        if verify.verify_t(args["token"]):
+        username = verify.verify_t(args["token"])
+        if username:
             for item in args["uuid"]:
                 card.delete(item)
+                log.insert_delete(item, username)
             result["success"] = True
         return result
 
@@ -54,7 +59,9 @@ class CardModify(Resource):
         args = parser.parse_args()
 
         data = ast.literal_eval(args["data"])
-        if verify.verify_t(args["token"]) and card.update(data["uuid"], data):
+        username = verify.verify_t(args["token"])
+        if username and card.update(data["uuid"], data):
+            log.insert_modify(data["uuid"], username)
             result["success"] = True
         return result
 

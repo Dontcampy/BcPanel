@@ -1,5 +1,6 @@
 # Database access operations for user
 import re
+import traceback
 
 from bson import ObjectId
 
@@ -20,6 +21,8 @@ def insert_account(username, pwd):
             data = {"username": username, "pwd": pwd, "admin": False, "vip": True,
                     "delete": False, "system": False}
             success = mongo.user.insert(data)
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -34,7 +37,9 @@ def del_account(username):
     mongo = Mongo()
     try:
         result = mongo.user.remove({"username": username})
-        success = bool(result["n"])
+        success = bool(True)
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -51,7 +56,9 @@ def set_pwd(username, pwd):
     mongo = Mongo()
     try:
         result = mongo.user.update({"username": username}, {"$set": {"pwd": pwd}})
-        success = bool(result["n"])
+        success = bool(True)
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -67,7 +74,9 @@ def set_admin(username):
     mongo = Mongo()
     try:
         result = mongo.user.update({"username": username}, {"$set": {"admin": True}})
-        success = bool(result["n"])
+        success = bool(True)
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -84,6 +93,8 @@ def select_id(_id):
     try:
         result = mongo.user.find_one({"_id": ObjectId(_id)})
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -100,6 +111,8 @@ def select_username(username):
     try:
         result = mongo.user.find_one({"username": username})
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -116,9 +129,12 @@ def select_last_page(count):
     mongo = Mongo()
     try:
         for item in mongo.user.find({"delete": False}).limit(count):
-            del item["pwd"]
+            if item is not None:
+                del item["pwd"]
             result.insert(0, item)
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -135,9 +151,12 @@ def select_first_page(count):
     mongo = Mongo()
     try:
         for item in mongo.user.find({"delete": False}).sort("_id", -1).limit(count):
-            del item["pwd"]
+            if item is not None:
+                del item["pwd"]
             result.append(item)
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -158,15 +177,19 @@ def select_dir_page(count, page, _id):
         if page > 0:
             skip_count = (page - 1) * count
             for item in mongo.user.find({"_id": {"$gt": ObjectId(_id)}, "delete": False}).skip(skip_count).limit(count):
-                del item["pwd"]
+                if item is not None:
+                    del item["pwd"]
                 result.insert(0, item)
             success = result
         elif page < 0:
             skip_count = abs(page) * count - 1
             for item in mongo.user.find({"_id": {"$lt": ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
-                del item["pwd"]
+                if item is not None:
+                    del item["pwd"]
                 result.append(item)
             success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -186,9 +209,12 @@ def select_pre_page(count, page, _id):
     try:
         skip_count = (page - 1) * count
         for item in mongo.user.find({"_id": {"$gt": ObjectId(_id)}, "delete": False}).skip(skip_count).limit(count):
-            del item["pwd"]
+            if item is not None:
+                del item["pwd"]
             result.insert(0, item)
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -208,9 +234,12 @@ def select_next_page(count, page, _id):
     try:
         skip_count = abs(page) * count - 1
         for item in mongo.user.find({"_id": {"$lt": ObjectId(_id)}, "delete": False}).sort("_id", -1).skip(skip_count).limit(count):
-            del item["pwd"]
+            if item is not None:
+                del item["pwd"]
             result.append(item)
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -229,9 +258,12 @@ def select_page(count, page):
     try:
         skip_count = (page - 1) * count
         for item in mongo.user.find({"delete": False}).sort("_id", -1).skip(skip_count).limit(count):
-            del item["pwd"]
+            if item is not None:
+                del item["pwd"]
             result.append(item)
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success
@@ -246,6 +278,8 @@ def count():
     mongo = Mongo()
     try:
         result = mongo.user.find({"delete": False}).count()
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return result
@@ -262,9 +296,12 @@ def select_fuzzy(key):
     mongo = Mongo()
     try:
         for item in mongo.user.find({"$or": [{"username": re.compile(key)}]}).sort("_id", -1):
-            del item["pwd"]
+            if item is not None:
+                del item["pwd"]
             result.append(item)
         success = result
+    except Exception as e:
+        traceback.print_exc()
     finally:
         mongo.close()
         return success

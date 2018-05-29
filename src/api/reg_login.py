@@ -1,4 +1,5 @@
 import src.dao.user as user
+import src.dao.log as log
 
 from flask_restful import Resource, reqparse
 
@@ -19,11 +20,12 @@ class Login(Resource):
 
         if verify_normal(args["username"], args["pwd"]):
             data = user.select_username(args["username"])
-            if data["admin"] or data["system"]:
-                result["success"] = True
-                result["token"] = get_token(data["username"])
-                del data["pwd"]
-                result["user"] = data
-                return result
-
+            if data is not None:
+                if data["admin"] or data["system"]:
+                    result["success"] = True
+                    result["token"] = get_token(data["username"])
+                    del data["pwd"]
+                    result["user"] = data
+                    log.insert_login(data["username"])
+                    return result
         return result
